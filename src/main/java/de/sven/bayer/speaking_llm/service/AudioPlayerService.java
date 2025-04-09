@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
 public class AudioPlayerService {
     private final BlockingQueue<byte[]> audioQueue = new LinkedBlockingQueue<>();
     private final Thread playerThread;
@@ -25,7 +24,7 @@ public class AudioPlayerService {
     public void queueAudio(byte[] audioData) {
         try {
             audioQueue.put(audioData);
-            log.debug("Added audio to queue. Queue size: {}", audioQueue.size());
+            System.out.println("Added audio to queue. Queue size: " + audioQueue.size());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted while queuing audio", e);
@@ -33,6 +32,12 @@ public class AudioPlayerService {
     }
 
     public boolean isAudioFinished() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
         return audioQueue.isEmpty() && !running.get();
     }
 
@@ -41,6 +46,9 @@ public class AudioPlayerService {
             try {
                 byte[] audioData = audioQueue.take();
                 playAudio(audioData);
+                while (running.get()) {
+                    Thread.sleep(5000);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -55,26 +63,18 @@ public class AudioPlayerService {
             Clip clip = AudioSystem.getClip();
             clip.open(AudioSystem.getAudioInputStream(bais));
 
-            Object lock = new Object();
             clip.addLineListener(event -> {
                 if (event.getType() == LineEvent.Type.STOP) {
-                    synchronized (lock) {
-                        lock.notify();
-                    }
+                    clip.close();
+                    running.set(false);
                 }
             });
 
             clip.start();
-            log.debug("Playing audio clip");
+            System.out.println("Playing audio clip");
 
-            synchronized (lock) {
-                lock.wait();
-            }
-
-            clip.close();
         } catch (Exception e) {
-            log.error("Error playing audio", e);
-        } finally {
+            System.err.println("Error playing audio:" + e);
             running.set(false);
         }
     }

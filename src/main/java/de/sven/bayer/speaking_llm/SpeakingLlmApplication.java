@@ -21,8 +21,8 @@ public class SpeakingLlmApplication {
 	@Bean
 	public CommandLineRunner startAudioRecorder() {
 		return args -> {
-			audioRecorder.start();
 			Runtime.getRuntime().addShutdownHook(new Thread(audioRecorder::stop));
+			audioRecorder.start();
 		};
 	}
 }

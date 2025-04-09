@@ -29,7 +29,7 @@ public class AudioRecorder {
     );
     public static final int MIN_AUDIO_LENGTH_MS = 200;
     private static final int PROCESSING_THREADS = 4;
-    public static final int MIN_SILENCE_DURATION = 3000;
+    public static final int MIN_SILENCE_DURATION = 8000;
 
     private final AsrService asrService;
     private final LlmChatService llmChatService;
@@ -62,11 +62,6 @@ public class AudioRecorder {
         while (running) {
             boolean audioFinished = false;
             while (!audioFinished) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
                 audioFinished = audioPlayerService.isAudioFinished();
             }
             try {

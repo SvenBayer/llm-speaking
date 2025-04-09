@@ -24,18 +24,20 @@ public class TtsService {
         String text = llmAnswerWithThink.answer();
         List<String> sentences = textSplitter.splitIntoSentences(text);
         for (String sentence : sentences) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.TEXT_PLAIN);
-            HttpEntity<String> entity = new HttpEntity<>(sentence, headers);
+            if (sentence != null && !sentence.trim().isEmpty()) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.TEXT_PLAIN);
+                HttpEntity<String> entity = new HttpEntity<>(sentence, headers);
 
-            ResponseEntity<byte[]> response = restTemplate.exchange(
-                    BASE_URL + "/tts",
-                    HttpMethod.POST,
-                    entity,
-                    byte[].class
-            );
-            byte[] audioAsBytes = response.getBody();
-            audioPlayerService.queueAudio(audioAsBytes);
+                ResponseEntity<byte[]> response = restTemplate.exchange(
+                        BASE_URL + "/tts",
+                        HttpMethod.POST,
+                        entity,
+                        byte[].class
+                );
+                byte[] audioAsBytes = response.getBody();
+                audioPlayerService.queueAudio(audioAsBytes);
+            }
         }
     }
 }
